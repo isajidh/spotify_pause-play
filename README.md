@@ -1,8 +1,8 @@
 # Spotify Web Player 2-Minute Song Delay Automation
 
-A Tampermonkey userscript that automatically pauses every new song in the **Spotify Web Player** for a configurable amount of time before resuming playback.
+A Tampermonkey userscript that automatically pauses every new song in the **Spotify Web Player** for a configurable amount of time before resuming playback, with automatic ad muting.
 
-The script is designed for users who want an automatic silent gap between shuffled tracks without modifying playlists, queues, or using the Spotify desktop application.
+The script is designed for users who want an automatic silent gap between shuffled tracks without modifying playlists, queues, or using the Spotify desktop application. It also automatically mutes advertisements and unmutes when they end.
 
 ---
 
@@ -15,6 +15,8 @@ The script is designed for users who want an automatic silent gap between shuffl
 * Waits for a configurable delay period.
 * Automatically resumes playback.
 * Repeats continuously while Spotify Shuffle mode is active.
+* Automatically detects advertisements and mutes audio.
+* Automatically unmutes when advertisements end.
 
 ### Current Features
 
@@ -27,6 +29,11 @@ The script is designed for users who want an automatic silent gap between shuffl
 ✅ Supports manual track skipping
 ✅ Restarts the delay timer when a new track is selected
 ✅ Lightweight browser-only automation
+✅ Automatic advertisement muting
+✅ Automatic unmuting after ads end
+✅ Floating control panel with status display
+✅ Enable/Disable automation with one click
+✅ Draggable panel with saved position
 
 ---
 
@@ -69,6 +76,22 @@ Repeat
 ```
 
 The script does not control Spotify's queue or shuffle algorithm. It only controls playback timing.
+
+---
+
+## Version History
+
+### v1.1 (Current)
+* ✨ **NEW**: Automatic advertisement detection and muting
+* ✨ **NEW**: Automatic unmuting when ads end
+* 🎨 Enhanced control panel with "Ad Muted" status display
+* 🐛 Improved DOM helper functions for better reliability
+
+### v1.0 (Initial Release)
+* Core pause/resume automation for new tracks
+* Floating control panel with countdown timer
+* Enable/Disable toggle with persistent state
+* Draggable panel with saved position
 
 ---
 

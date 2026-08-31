@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Spotify Web Player - 2 Minute Song Delay
 // @namespace    https://tampermonkey.net/
-// @version      1.0
-// @description  Automatically pauses each new Spotify Web Player track for 2 minutes before resuming.
+// @version      1.1
+// @description  Automatically pauses each new Spotify Web Player track for 2 minutes before resuming. Also mutes advertisements.
 // @author       ChatGPT
 // @match        https://open.spotify.com/*
 // @grant        GM_setValue
@@ -55,6 +55,8 @@
     let isWaiting = false;
 
     let observerStarted = false;
+
+    let adMuted = false;
 
 
     /*
@@ -128,6 +130,66 @@
         if (!button) {
 
             log("Play button unavailable");
+
+            return false;
+
+        }
+
+
+        button.click();
+
+        return true;
+
+    }
+
+
+    function getMuteButton() {
+
+        return document.querySelector(
+            '[data-testid="volume-bar-toggle-mute-button"]'
+        );
+
+    }
+
+
+    function isAdvertisement() {
+
+        const element =
+            document.querySelector(
+                '[data-testid="context-item-info-ad-subtitle"]'
+            );
+
+        return element
+            ? true
+            : false;
+
+    }
+
+
+    function isMuted() {
+
+        const button = getMuteButton();
+
+        if (!button) return false;
+
+
+        const label =
+            button.getAttribute("aria-label")
+            || "";
+
+
+        return label.toLowerCase() === "unmute";
+
+    }
+
+
+    function clickMute() {
+
+        const button = getMuteButton();
+
+        if (!button) {
+
+            log("Mute button unavailable");
 
             return false;
 
@@ -356,6 +418,54 @@
     */
 
 
+    /*
+    ============================================================
+        AD MUTE MONITORING
+    ============================================================
+    */
+
+
+    function monitorAds() {
+
+
+        if (!enabled)
+            return;
+
+
+        const isAd =
+            isAdvertisement();
+
+
+        if (isAd) {
+
+            if (!isMuted()) {
+
+                clickMute();
+
+                adMuted = true;
+
+                log("Advertisement detected, muted");
+
+            }
+
+        } else {
+
+            if (isMuted() && adMuted) {
+
+                clickMute();
+
+                adMuted = false;
+
+                log("Advertisement ended, unmuted");
+
+            }
+
+        }
+
+
+    }
+
+
     setInterval(() => {
 
 
@@ -368,6 +478,9 @@
             handleTrackChange(track);
 
         }
+
+
+        monitorAds();
 
 
     }, CONFIG.fallbackIntervalMs);
@@ -582,7 +695,19 @@
 
 
 
-        if (isWaiting) {
+        if (adMuted) {
+
+
+            statusText.textContent =
+                "Ad Muted";
+
+
+            countdownText.textContent =
+                "--";
+
+
+        }
+        else if (isWaiting) {
 
 
             statusText.textContent =
