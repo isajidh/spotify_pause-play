@@ -213,16 +213,20 @@
 
 
         if (!enabled)
-            return;
+        {
+         return;
+        }
 
 
         if (!newTrack)
-            return;
-
+        {
+         return;
+        }
 
         if (newTrack === currentTrack)
-            return;
-
+        {
+         return;
+        }
 
         currentTrack = newTrack;
 
@@ -260,8 +264,9 @@
 
 
             if (!enabled)
+            {
                 return;
-
+            }
 
             if (isPlaying()) {
 
@@ -304,8 +309,9 @@
 
 
                     if (!enabled)
+                    {
                         return;
-
+                    }
 
                     if (!isPlaying()) {
 
@@ -369,8 +375,9 @@
 
 
         if (observerStarted)
+        {
             return;
-
+        }
 
         observerStarted = true;
 
@@ -429,8 +436,9 @@
 
 
         if (!enabled)
+        {
             return;
-
+        }
 
         const isAd =
             isAdvertisement();
@@ -532,7 +540,9 @@
     function createPanel() {
 
         if (!CONFIG.showPanel)
+        {
             return;
+        }
 
 
         panel = document.createElement("div");
@@ -665,7 +675,9 @@
 
 
         if (!panel)
+        {
             return;
+        }
 
 
 
@@ -885,7 +897,9 @@
 
 
                 if (!dragging)
+                {
                     return;
+                }
 
 
                 element.style.left =
@@ -924,8 +938,9 @@
 
 
                 if (!dragging)
+                {
                     return;
-
+                }
 
                 dragging = false;
 
@@ -971,4 +986,4 @@
     log(
         "Advanced Spotify Delay ready"
     );
-})();
+})();s
