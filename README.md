@@ -31,9 +31,11 @@ The script is designed for users who want an automatic silent gap between shuffl
 ✅ Lightweight browser-only automation
 ✅ Automatic advertisement muting
 ✅ Automatic unmuting after ads end
+✅ Independent enable/disable control for advertisement muting
 ✅ Floating control panel with status display
 ✅ Enable/Disable automation with one click
 ✅ Draggable panel with saved position
+✅ Configurable pause duration with persistent settings
 
 ---
 
@@ -81,7 +83,17 @@ The script does not control Spotify's queue or shuffle algorithm. It only contro
 
 ## Version History
 
-### v1.1 (Current)
+### v1.3 (Current)
+* ✨ **NEW**: Configurable pause duration from the floating control panel
+* 💾 Pause duration is saved across browser sessions
+* ✅ Duration changes apply to the next track without interrupting an active pause
+
+### v1.2
+* ✨ **NEW**: Independent enable/disable control for advertisement muting
+* 🔄 Ad-muting preference is saved across browser sessions
+* 🔊 Disabling ad muting immediately releases a mute applied by the script
+
+### v1.1
 * ✨ **NEW**: Automatic advertisement detection and muting
 * ✨ **NEW**: Automatic unmuting when ads end
 * 🎨 Enhanced control panel with "Ad Muted" status display
@@ -92,6 +104,17 @@ The script does not control Spotify's queue or shuffle algorithm. It only contro
 * Floating control panel with countdown timer
 * Enable/Disable toggle with persistent state
 * Draggable panel with saved position
+
+---
+
+## Pause Duration
+
+The floating control panel includes a configurable pause duration field. The default is **120 seconds**.
+
+* Enter a whole number from **1 to 3600** seconds.
+* Click **Apply** to save the setting across browser sessions.
+* A changed value applies to the next track; an active pause keeps its original duration.
+* Invalid values are rejected and do not affect playback.
 
 ---
 

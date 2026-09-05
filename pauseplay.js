@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Spotify Web Player - 2 Minute Song Delay
 // @namespace    https://tampermonkey.net/
-// @version      1.1
-// @description  Automatically pauses each new Spotify Web Player track for 2 minutes before resuming. Also mutes advertisements.
-// @author       ChatGPT
+// @version      1.3
+// @description  Automatically pauses each new Spotify Web Player track for a configurable duration before resuming. Also mutes advertisements.
+// @author       Sajidh
 // @match        https://open.spotify.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -24,6 +24,10 @@
         // Pause duration after every new song
         pauseDurationSeconds: 120,
 
+        // Accepted range for user-configured pause duration
+        minimumPauseDurationSeconds: 1,
+        maximumPauseDurationSeconds: 3600,
+
         // How often fallback checks run
         fallbackIntervalMs: 1000,
 
@@ -36,6 +40,26 @@
     };
 
 
+    function normalizePauseDuration(value) {
+
+        const duration =
+            Number(value);
+
+
+        if (
+            !Number.isInteger(duration)
+            || duration < CONFIG.minimumPauseDurationSeconds
+            || duration > CONFIG.maximumPauseDurationSeconds
+        ) {
+            return CONFIG.pauseDurationSeconds;
+        }
+
+
+        return duration;
+
+    }
+
+
     /*
     ============================================================
         STATE
@@ -43,6 +67,16 @@
     */
 
     let enabled = GM_getValue("enabled", true);
+
+    let adsEnabled = GM_getValue("adsEnabled", true);
+
+    let pauseDurationSeconds =
+        normalizePauseDuration(
+            GM_getValue(
+                "pauseDurationSeconds",
+                CONFIG.pauseDurationSeconds
+            )
+        );
 
     let currentTrack = "";
 
@@ -203,6 +237,22 @@
     }
 
 
+    function releaseAdMute() {
+
+        if (adMuted && isMuted()) {
+
+            clickMute();
+
+            log("Advertisement mute released");
+
+        }
+
+
+        adMuted = false;
+
+    }
+
+
     /*
     ============================================================
         TRACK CHANGE HANDLING
@@ -255,6 +305,10 @@
         clearTimers();
 
 
+        const cycleDurationSeconds =
+            pauseDurationSeconds;
+
+
         isWaiting = true;
 
 
@@ -278,7 +332,7 @@
 
 
             secondsRemaining =
-                CONFIG.pauseDurationSeconds;
+                cycleDurationSeconds;
 
 
             updatePanel();
@@ -329,7 +383,7 @@
                     updatePanel();
 
 
-                }, CONFIG.pauseDurationSeconds * 1000);
+                }, cycleDurationSeconds * 1000);
 
 
 
@@ -435,8 +489,10 @@
     function monitorAds() {
 
 
-        if (!enabled)
+        if (!enabled || !adsEnabled)
         {
+            releaseAdMute();
+
             return;
         }
 
@@ -535,6 +591,10 @@
     let statusText = null;
     let countdownText = null;
     let toggleButton = null;
+    let adsToggleButton = null;
+    let durationInput = null;
+    let durationSaveButton = null;
+    let durationErrorText = null;
 
 
     function createPanel() {
@@ -570,8 +630,21 @@
                 </span>
             </div>
 
+            <div style="margin-top:8px">
+                Pause duration (seconds):
+                <input id="spotify-delay-duration" type="number" min="1" max="3600" step="1" style="width:70px;margin-top:4px">
+                <button id="spotify-delay-duration-save" style="margin-top:4px">
+                    Apply
+                </button>
+                <span id="spotify-delay-duration-error" style="display:block;color:#f15e6c;margin-top:4px"></span>
+            </div>
+
             <button id="spotify-delay-toggle">
                 Disable
+            </button>
+
+            <button id="spotify-ads-toggle" style="margin-top:8px">
+                Mute Ads
             </button>
 
         `;
@@ -596,6 +669,8 @@
             fontSize:"13px",
 
             borderRadius:"10px",
+
+            border:"1px solid #8b5cf6",
 
             zIndex:"999999",
 
@@ -647,6 +722,42 @@
             toggleAutomation;
 
 
+        adsToggleButton =
+            panel.querySelector(
+                "#spotify-ads-toggle"
+            );
+
+
+        durationInput =
+            panel.querySelector(
+                "#spotify-delay-duration"
+            );
+
+
+        durationSaveButton =
+            panel.querySelector(
+                "#spotify-delay-duration-save"
+            );
+
+
+        durationErrorText =
+            panel.querySelector(
+                "#spotify-delay-duration-error"
+            );
+
+
+        durationInput.value =
+            pauseDurationSeconds;
+
+
+        durationSaveButton.onclick =
+            savePauseDuration;
+
+
+        adsToggleButton.onclick =
+            toggleAdMuting;
+
+
 
         document.body.appendChild(panel);
 
@@ -680,6 +791,35 @@
         }
 
 
+        if (adMuted) {
+
+            panel.style.border =
+                "3px solid #1DB954";
+
+            panel.style.boxShadow =
+                "0 0 8px #1DB954, 0 0 20px rgba(29,185,84,.75)";
+
+        }
+        else if (isWaiting) {
+
+            panel.style.border =
+                "3px solid #8b5cf6";
+
+            panel.style.boxShadow =
+                "0 0 8px #8b5cf6, 0 0 20px rgba(139,92,246,.75)";
+
+        }
+        else {
+
+            panel.style.border =
+                "1px solid #8b5cf6";
+
+            panel.style.boxShadow =
+                "0 4px 20px rgba(0,0,0,.5)";
+
+        }
+
+
 
         if (!enabled) {
 
@@ -696,6 +836,12 @@
                 "Enable";
 
 
+            adsToggleButton.textContent =
+                adsEnabled
+                ? "Mute Ads"
+                : "Unmute Ads";
+
+
             return;
 
         }
@@ -704,6 +850,12 @@
 
         toggleButton.textContent =
             "Disable";
+
+
+        adsToggleButton.textContent =
+            adsEnabled
+            ? "Mute Ads"
+            : "Unmute Ads";
 
 
 
@@ -817,6 +969,79 @@
 
 
         updatePanel();
+
+    }
+
+
+    function toggleAdMuting() {
+
+
+        adsEnabled = !adsEnabled;
+
+
+        GM_setValue(
+            "adsEnabled",
+            adsEnabled
+        );
+
+
+        log(
+            adsEnabled
+            ? "Advertisement muting enabled"
+            : "Advertisement muting disabled"
+        );
+
+
+        if (!adsEnabled) {
+
+            releaseAdMute();
+
+        }
+
+
+        updatePanel();
+
+    }
+
+
+    function savePauseDuration() {
+
+
+        const inputValue =
+            Number(durationInput.value);
+
+
+        if (
+            !Number.isInteger(inputValue)
+            || inputValue < CONFIG.minimumPauseDurationSeconds
+            || inputValue > CONFIG.maximumPauseDurationSeconds
+        ) {
+            durationErrorText.textContent =
+                "Enter a whole number from 1 to 3600.";
+
+            return;
+        }
+
+
+        pauseDurationSeconds =
+            inputValue;
+
+
+        GM_setValue(
+            "pauseDurationSeconds",
+            pauseDurationSeconds
+        );
+
+
+        durationErrorText.textContent =
+            "Applies to the next track.";
+
+
+        log(
+            "Pause duration updated:",
+            pauseDurationSeconds,
+            "seconds"
+        );
 
     }
 
@@ -986,4 +1211,4 @@
     log(
         "Advanced Spotify Delay ready"
     );
-})();s
+})();
